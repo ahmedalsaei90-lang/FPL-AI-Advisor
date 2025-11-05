@@ -22,10 +22,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true, // Prevent build failures from linting
   },
 
-  // Optimize for production deployment
-  swcMinify: true,
-
-  // Enable compression
+  // Enable compression (swcMinify removed - enabled by default in Next.js 15)
   compress: true,
 
   // Optimize images
