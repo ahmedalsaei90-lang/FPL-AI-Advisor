@@ -68,21 +68,10 @@ export default function LoginPage() {
         throw new Error(data.error || 'Invalid credentials')
       }
 
-      // STEP 1: Clear any existing session data (guest or old user) completely
+      // Clear any existing user session data (guest or old user)
       localStorage.removeItem('user')
 
-      // Dispatch event to clear user from AuthProvider state
-      if (typeof window !== 'undefined') {
-        try {
-          window.dispatchEvent(
-            new StorageEvent('storage', { key: 'user', newValue: null })
-          )
-        } catch {
-          window.dispatchEvent(new Event('auth:user-updated'))
-        }
-      }
-
-      // STEP 2: Set Supabase session for the new user
+      // Set Supabase session
       const supabase = getBrowserClient()
       if (data.session) {
         await supabase.auth.setSession({
@@ -91,23 +80,12 @@ export default function LoginPage() {
         })
       }
 
-      // STEP 3: Store new user info in localStorage
+      // Store new user info in localStorage
       localStorage.setItem('user', JSON.stringify(data.user))
 
-      // STEP 4: Dispatch event to update AuthProvider with new user
-      if (typeof window !== 'undefined') {
-        try {
-          window.dispatchEvent(
-            new StorageEvent('storage', { key: 'user', newValue: JSON.stringify(data.user) })
-          )
-        } catch {
-          window.dispatchEvent(new Event('auth:user-updated'))
-        }
-      }
-
-      // STEP 5: Wait longer to ensure auth state fully updates before navigation
-      await new Promise(resolve => setTimeout(resolve, 200))
-      router.replace('/dashboard')
+      // Force a full page reload to ensure clean auth state
+      // This is the most reliable way to clear guest session and load new user
+      window.location.href = '/dashboard'
     } catch (error: any) {
       setError(error.message)
     } finally {
