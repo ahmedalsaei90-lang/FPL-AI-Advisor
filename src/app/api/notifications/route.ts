@@ -75,8 +75,9 @@ export async function GET(request: NextRequest) {
     const { data: notifications, error, count } = await query
 
     if (error) {
-      // If table doesn't exist, return empty result instead of error
-      if (error.code === 'PGRST116') {
+      // If table doesn't exist or relation doesn't exist, return empty result instead of error
+      // PGRST116 = table not found, 42P01 = relation does not exist
+      if (error.code === 'PGRST116' || error.code === '42P01' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
         return NextResponse.json({
           notifications: [],
           pagination: {
@@ -91,6 +92,7 @@ export async function GET(request: NextRequest) {
         })
       }
 
+      console.error('Notifications fetch error:', error)
       return NextResponse.json(
         { error: 'Failed to fetch notifications' },
         { status: 500 }
@@ -103,11 +105,14 @@ export async function GET(request: NextRequest) {
     const hasPrevPage = page > 1
 
     // Get unread count
-    const { count: unreadCount } = await supabase
+    const { count: unreadCount, error: unreadError } = await supabase
       .from('user_notifications')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('is_read', false)
+
+    // If unread count query fails, just return 0
+    const finalUnreadCount = unreadError ? 0 : (unreadCount || 0)
 
     return NextResponse.json({
       notifications: notifications || [],
@@ -119,7 +124,7 @@ export async function GET(request: NextRequest) {
         hasNextPage,
         hasPrevPage
       },
-      unreadCount: unreadCount || 0
+      unreadCount: finalUnreadCount
     })
   } catch (error) {
     console.error('Notifications fetch error:', error)
@@ -180,6 +185,16 @@ export async function POST(request: NextRequest) {
     const { data, error } = await query.select()
 
     if (error) {
+      // If table doesn't exist, return success with 0 marked
+      if (error.code === 'PGRST116' || error.code === '42P01' || error.message?.includes('relation')) {
+        return NextResponse.json({
+          success: true,
+          message: 'No notifications to mark',
+          markedCount: 0
+        })
+      }
+
+      console.error('Mark as read error:', error)
       return NextResponse.json(
         { error: 'Failed to mark notifications as read' },
         { status: 500 }
@@ -250,6 +265,16 @@ export async function DELETE(request: NextRequest) {
     const { data, error } = await query.select()
 
     if (error) {
+      // If table doesn't exist, return success with 0 deleted
+      if (error.code === 'PGRST116' || error.code === '42P01' || error.message?.includes('relation')) {
+        return NextResponse.json({
+          success: true,
+          message: 'No notifications to delete',
+          deletedCount: 0
+        })
+      }
+
+      console.error('Delete notifications error:', error)
       return NextResponse.json(
         { error: 'Failed to delete notifications' },
         { status: 500 }
@@ -315,6 +340,18 @@ export async function PUT(request: NextRequest) {
       .single()
 
     if (error) {
+      // If table doesn't exist, return 503 Service Unavailable
+      if (error.code === 'PGRST116' || error.code === '42P01' || error.message?.includes('relation')) {
+        return NextResponse.json(
+          {
+            error: 'Notifications system not available',
+            message: 'The notifications table has not been created yet'
+          },
+          { status: 503 }
+        )
+      }
+
+      console.error('Create notification error:', error)
       return NextResponse.json(
         { error: 'Failed to create notification' },
         { status: 500 }

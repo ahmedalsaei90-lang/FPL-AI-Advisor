@@ -44,26 +44,29 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
 
     try {
       // Use authenticated API call - userId is extracted from JWT token on server
+      // Longer timeout for Vercel cold starts
       const fetchPromise = authenticatedGet('/api/notifications?limit=10')
       const timeoutPromise = new Promise<Response>((_, reject) =>
-        setTimeout(() => reject(new Error('Notifications fetch timeout')), 5000)
+        setTimeout(() => reject(new Error('Notifications fetch timeout')), 10000)
       )
 
       const response = await Promise.race([fetchPromise, timeoutPromise])
 
       if (response.ok) {
-        const jsonPromise = response.json()
-        const jsonTimeoutPromise = new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('JSON parsing timeout')), 3000)
-        )
-
-        const data = await Promise.race([jsonPromise, jsonTimeoutPromise])
+        const data = await response.json()
         setNotifications(data.notifications || [])
         setUnreadCount(data.unreadCount || 0)
+      } else if (response.status === 404 || response.status === 500) {
+        // Table doesn't exist or server error - silently fail
+        setNotifications([])
+        setUnreadCount(0)
       }
     } catch (error) {
-      console.error('Error fetching notifications:', error)
-      // Set empty state on error to prevent hanging
+      // Silently fail - notifications are not critical for app functionality
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Notifications unavailable:', error)
+      }
       setNotifications([])
       setUnreadCount(0)
     }
@@ -82,22 +85,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     if (!userId) return
 
     try {
-      // Use authenticated API call
-      const fetchPromise = authenticatedPut('/api/notifications', notification)
-
-      const timeoutPromise = new Promise<Response>((_, reject) =>
-        setTimeout(() => reject(new Error('Add notification timeout')), 5000)
-      )
-
-      const response = await Promise.race([fetchPromise, timeoutPromise])
+      const response = await authenticatedPut('/api/notifications', notification)
 
       if (response.ok) {
-        const jsonPromise = response.json()
-        const jsonTimeoutPromise = new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('JSON parsing timeout')), 3000)
-        )
-
-        const data = await Promise.race([jsonPromise, jsonTimeoutPromise])
+        const data = await response.json()
         const newNotification: Notification = {
           ...notification,
           id: data.notification.id,
@@ -109,7 +100,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         setUnreadCount(prev => prev + 1)
       }
     } catch (error) {
-      console.error('Error adding notification:', error)
+      // Silently fail - notifications are not critical
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to add notification:', error)
+      }
     }
   }
 
@@ -117,17 +111,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     if (!userId) return
 
     try {
-      // Use authenticated API call - userId no longer needed in body
-      const fetchPromise = authenticatedPost('/api/notifications', {
+      const response = await authenticatedPost('/api/notifications', {
         notificationIds,
         markAll: !notificationIds
       })
-
-      const timeoutPromise = new Promise<Response>((_, reject) =>
-        setTimeout(() => reject(new Error('Mark as read timeout')), 5000)
-      )
-
-      const response = await Promise.race([fetchPromise, timeoutPromise])
 
       if (response.ok) {
         if (notificationIds) {
@@ -146,7 +133,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         }
       }
     } catch (error) {
-      console.error('Error marking notifications as read:', error)
+      // Silently fail - notifications are not critical
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to mark notifications as read:', error)
+      }
     }
   }
 
@@ -158,17 +148,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     if (!userId) return
 
     try {
-      // Use authenticated API call - userId no longer needed in body
-      const fetchPromise = authenticatedDelete('/api/notifications', {
+      const response = await authenticatedDelete('/api/notifications', {
         notificationIds,
         deleteAll: !notificationIds
       })
-
-      const timeoutPromise = new Promise<Response>((_, reject) =>
-        setTimeout(() => reject(new Error('Delete notifications timeout')), 5000)
-      )
-
-      const response = await Promise.race([fetchPromise, timeoutPromise])
 
       if (response.ok) {
         if (notificationIds) {
@@ -186,7 +169,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         }
       }
     } catch (error) {
-      console.error('Error deleting notifications:', error)
+      // Silently fail - notifications are not critical
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to delete notifications:', error)
+      }
     }
   }
 
