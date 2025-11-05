@@ -6,8 +6,6 @@ import { z } from 'zod'
 import {
   transformFPLTeamData,
   isValidFPLTeamId,
-  isGuestTeamId,
-  isValidRealFPLTeamId,
   getFPLTeam,
   getCurrentGameweek
 } from '@/lib/fpl-api'
@@ -58,16 +56,9 @@ export async function POST(request: NextRequest) {
     const { userId, fplTeamId } = validation.data!
 
     const supabase = getServerClient()
-    
-    if (isGuestTeamId(fplTeamId)) {
-            return NextResponse.json(
-        { error: 'Guest sessions cannot import or sync FPL data. Create an account to connect your real team.' },
-        { status: 403 }
-      )
-    }
 
-    // Validate FPL Team ID format for regular users
-    if (!isValidRealFPLTeamId(fplTeamId)) {
+    // Validate FPL Team ID format
+    if (!isValidFPLTeamId(fplTeamId)) {
       return NextResponse.json(
         { error: 'Invalid FPL Team ID. Please enter a valid FPL team ID.' },
         { status: 400 }

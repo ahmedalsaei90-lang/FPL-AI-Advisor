@@ -130,24 +130,20 @@ export default function TeamPage() {
             </CardHeader>
             <CardContent className="text-center space-y-4">
               <p className="text-foreground/80 text-lg">
-                {user?.isGuest
-                  ? "Guest users don't have FPL team data. Create an account and import your team to view detailed statistics."
-                  : "You haven't imported your FPL team yet. Import your team to view detailed statistics and get personalized advice."}
+                You haven't imported your FPL team yet. Import your team to view detailed statistics and get personalized advice.
               </p>
               <div className="flex gap-4 justify-center mt-6">
                 <Link href="/dashboard">
                   <Button className="bg-gradient-primary hover:shadow-glow-blue transition-all duration-300 font-bold">
                     <Shirt className="mr-2 h-5 w-5" />
-                    {user?.isGuest ? 'Go to Dashboard' : 'Import Team'}
+                    Import Team
                   </Button>
                 </Link>
-                {!user?.isGuest && (
-                  <Link href="/advisor">
-                    <Button variant="outline" className="border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground transition-all duration-300 font-bold">
-                      Get AI Advice
-                    </Button>
-                  </Link>
-                )}
+                <Link href="/advisor">
+                  <Button variant="outline" className="border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground transition-all duration-300 font-bold">
+                    Get AI Advice
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>

@@ -17,7 +17,7 @@ export async function createUserProfile(supabaseClient: any, user: any, addition
         name: additionalData.name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
         fpl_team_id: additionalData.fpl_team_id || null,
         fpl_team_name: additionalData.fpl_team_name || null,
-        is_guest: additionalData.is_guest || false,
+        is_guest: false,
         last_active_at: new Date().toISOString(),
       })
       .select()
@@ -33,7 +33,7 @@ export async function createUserProfile(supabaseClient: any, user: any, addition
       .from('user_events')
       .insert({
         user_id: user.id,
-        event_type: additionalData.is_guest ? 'guest_signup' : 'user_signup',
+        event_type: 'user_signup',
         event_data: {
           timestamp: new Date().toISOString(),
           email: user.email,
@@ -86,3 +86,4 @@ export async function getUserFromRequest(supabaseClient: any, req: Request) {
     return { user: null, error: error.message }
   }
 }
+

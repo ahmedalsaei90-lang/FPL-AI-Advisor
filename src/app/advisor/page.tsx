@@ -1,17 +1,15 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Header } from '@/components/header'
-import { AuthGuard } from '@/components/auth/AuthGuard'
 import { useAuth } from '@/components/auth/auth-provider-client'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   Send,
   MessageSquare,
@@ -77,27 +75,11 @@ const quickQuestions: QuickQuestion[] = [
 ]
 
 export default function AdvisorPage() {
-  const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [initialLoading, setInitialLoading] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!user) {
-      return
-    }
-    
-    // Check if user has connected their FPL team (only for non-guest users)
-    if (!user.isGuest && !user.fplTeamId) {
-      router.push('/dashboard')
-      return
-    }
-    
-    setInitialLoading(false)
-  }, [router, user])
 
   useEffect(() => {
     scrollToBottom()
@@ -123,16 +105,21 @@ export default function AdvisorPage() {
 
     try {
       // Call AI API
+      const payload: Record<string, unknown> = {
+        message: messageText,
+        conversationHistory: messages.slice(-5)
+      }
+
+      if (user?.id) {
+        payload.userId = user.id
+      }
+
       const response = await fetch('/api/advisor/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          message: messageText,
-          userId: user?.id,
-          conversationHistory: messages.slice(-5) // Send last 5 messages for context
-        })
+        body: JSON.stringify(payload)
       })
 
       const data = await response.json()
@@ -174,7 +161,7 @@ export default function AdvisorPage() {
     handleSendMessage(input)
   }
 
-  if (initialLoading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-pitch relative overflow-hidden flex items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-accent" />
@@ -183,17 +170,23 @@ export default function AdvisorPage() {
   }
 
   return (
-    <AuthGuard>
-      <div className="mobile-height-fix bg-gradient-pitch relative overflow-hidden">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+    <div className="mobile-height-fix bg-gradient-pitch relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
         </div>
 
         <Header currentPage="AI Advisor" />
 
       <div className="container mx-auto px-4 py-6 relative z-10 mobile-scroll-fix">
+        {!user && (
+          <Alert className="mb-6 border-primary/30 bg-glass">
+            <AlertDescription className="text-foreground/80">
+              You&apos;re chatting in preview mode. Sign in to save your conversations and sync them with your FPL team.
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="grid lg:grid-cols-4 gap-6 mobile-safe-height">
           {/* Quick Questions Sidebar */}
           <div className="lg:col-span-1 h-full overflow-y-auto mobile-scroll-fix">
@@ -334,8 +327,7 @@ export default function AdvisorPage() {
             </Card>
           </div>
         </div>
-        </div>
       </div>
-    </AuthGuard>
+    </div>
   )
 }

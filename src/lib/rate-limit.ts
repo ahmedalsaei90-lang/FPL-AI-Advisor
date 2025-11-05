@@ -171,16 +171,6 @@ export const rateLimits = {
   },
 
   /**
-   * Moderate for guest access
-   * 10 requests per hour
-   */
-  guest: {
-    max: 10,
-    windowMs: 60 * 60 * 1000, // 1 hour
-    keyGenerator: keyGenerators.byIP
-  },
-
-  /**
    * Moderate rate limit for API endpoints
    * 100 requests per minute
    */

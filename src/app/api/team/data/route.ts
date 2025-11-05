@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerClient, createServerClient } from '@/lib/supabase'
+import { getServerClient } from '@/lib/supabase'
 import { authenticateRequest } from '@/lib/auth-middleware'
 
 export async function GET(request: NextRequest) {
@@ -15,10 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = auth.user.id
-    const isGuestUser = auth.user.isGuest
-
-    // Use service client for guest users to bypass RLS
-    const supabase = isGuestUser ? createServerClient() : getServerClient()
+    const supabase = getServerClient()
 
     const { data: userTeam, error } = await supabase
       .from('user_teams')

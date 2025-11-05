@@ -429,18 +429,7 @@ export async function transformFPLTeamData(teamId: number): Promise<{
 export function isValidFPLTeamId(teamId: number): boolean {
   // FPL team IDs are positive integers
   return Number.isInteger(teamId) && teamId > 0 && teamId <= 10000000 // Reasonable upper bound
-}
-
-// Check if the team ID is a guest user ID (invalid ID used for guest accounts)
-export function isGuestTeamId(teamId: number): boolean {
-  // Guest users use the ID 999999 which is not a valid FPL team ID
-  return teamId === 999999
-}
-
-// Enhanced validation that checks for both format validity and guest IDs
-export function isValidRealFPLTeamId(teamId: number): boolean {
-  return isValidFPLTeamId(teamId) && !isGuestTeamId(teamId)
-}
+  }
 
 // ===========================
 // AI ADVISOR CONTEXT BUILDER

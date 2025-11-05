@@ -15,7 +15,7 @@ import { useAuth } from '@/components/auth/auth-provider-client'
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, refreshUser } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -71,44 +71,47 @@ export default function LoginPage() {
       // DEBUG: Log what we received from login API
       console.log('=== LOGIN DEBUG ===')
       console.log('Login API response:', data)
-      console.log('User isGuest flag:', data.user?.isGuest)
 
-      // CRITICAL FIX: Explicitly set isGuest to false for authenticated logins
-      // The API might be returning isGuest:true from the database profile
-      const authenticatedUser = {
-        ...data.user,
-        isGuest: false  // Force this to false - authenticated users are NOT guests
-      }
-
-      console.log('Corrected user object:', authenticatedUser)
-
-      // Clear ALL localStorage to ensure no guest remnants
+      // Clear ALL localStorage to ensure a clean state
       localStorage.clear()
       console.log('Cleared localStorage')
 
-      // Get Supabase client
-      const supabase = getBrowserClient()
+      try {
+        const supabase = getBrowserClient()
 
-      // Sign out any existing session first to clear guest session
-      await supabase.auth.signOut()
-      console.log('Signed out existing Supabase session')
+        // Sign out any existing session first to ensure a clean Supabase state
+        await supabase.auth.signOut()
+        console.log('Signed out existing Supabase session')
 
-      // Set the new authenticated session
-      if (data.session) {
-        await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token
-        })
-        console.log('Set new Supabase session')
+        // Set the new authenticated session
+        if (data.session) {
+          await supabase.auth.setSession({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token
+          })
+          console.log('Set new Supabase session')
+        }
+      } catch (sessionError) {
+        console.error('Supabase session handling failed:', sessionError)
       }
 
-      // Store corrected user info with isGuest explicitly false
-      localStorage.setItem('user', JSON.stringify(authenticatedUser))
+      // Store authenticated user info
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user))
+        try {
+          window.dispatchEvent(new Event('auth:user-updated'))
+        } catch (eventError) {
+          console.warn('Dispatch auth:user-updated event failed:', eventError)
+        }
+      }
       console.log('Stored user in localStorage:', localStorage.getItem('user'))
       console.log('=== END LOGIN DEBUG ===')
 
-      // Force a full page reload to ensure clean auth state
-      window.location.href = '/dashboard'
+      refreshUser().catch((refreshError) => {
+        console.error('Failed to refresh user after login:', refreshError)
+      })
+
+      router.replace('/dashboard')
     } catch (error: any) {
       setError(error.message)
     } finally {
@@ -220,3 +223,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

@@ -67,12 +67,6 @@ export const paginationPageSchema = z.number().int().min(1).default(1).or(
 // ============================================================================
 
 /**
- * Guest authentication request
- * No body required
- */
-export const guestAuthSchema = z.object({})
-
-/**
  * User signup request
  */
 export const signupSchema = z.object({
@@ -189,7 +183,7 @@ export const notificationListQuerySchema = z.object({
  * AI chat request
  */
 export const aiChatSchema = z.object({
-  userId: uuidSchema,
+  userId: uuidSchema.optional(),
   message: z.string().min(1, {
     message: 'Message cannot be empty'
   }).max(2000, {

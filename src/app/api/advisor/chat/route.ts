@@ -53,7 +53,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { userId, message } = validation.data!
+    const message = validation.data!.message
+    const userId = validation.data!.userId ?? null
 
     // Validate optional conversation history
     const historyValidation = conversationHistorySchema.safeParse(body.conversationHistory)
@@ -62,20 +63,25 @@ export async function POST(request: NextRequest) {
         // Get user and team data
     const supabase = getServerClient()
 
-    // Get user
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single()
+    let user = null
+    let teamData = null
 
-    // Check if this is a guest user
-    const isGuestUser = userError || !user || user.email?.includes('guest@') || user.is_guest === true
+    if (userId) {
+      const { data: userRecord, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single()
 
-        let teamData = null
+      if (userError || !userRecord) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        )
+      }
 
-    if (!isGuestUser) {
-      // Get user's latest team data (only for non-guest users)
+      user = userRecord
+
       const { data: teams } = await supabase
         .from('user_teams')
         .select('*')
@@ -86,7 +92,6 @@ export async function POST(request: NextRequest) {
 
       teamData = teams && teams.length > 0 ? teams[0] : null
 
-      // Update user query count and last active
       await supabase
         .from('users')
         .update({
@@ -98,7 +103,6 @@ export async function POST(request: NextRequest) {
         .then(() => console.log('User stats updated'))
         .catch(err => console.error('Failed to update user stats:', err))
 
-      // Create user event
       await supabase
         .from('user_events')
         .insert({
@@ -111,19 +115,18 @@ export async function POST(request: NextRequest) {
         })
         .then(() => console.log('User event created'))
         .catch(err => console.error('Failed to create user event:', err))
-    } else {
-          }
+    }
 
     // Fetch real-time FPL data for AI context
         let systemPrompt: string
 
     try {
       const fplContext = await getFPLContextForAI()
-            systemPrompt = buildAIPromptWithFPLData(fplContext, teamData)
+      systemPrompt = buildAIPromptWithFPLData(fplContext, teamData)
     } catch (error) {
       console.error('Failed to fetch FPL data, falling back to basic prompt:', error)
       // Fallback to basic prompt if FPL API fails
-      systemPrompt = buildSystemPrompt(user || { email: 'guest@fpl-advisor.com' }, teamData)
+      systemPrompt = buildSystemPrompt(user ?? { email: 'guest@fpl-advisor.com' }, teamData)
     }
 
     // Prepare messages for GLM API
@@ -150,10 +153,9 @@ export async function POST(request: NextRequest) {
     const aiResponse = apiResponse.content
     const tokensUsed = apiResponse.tokensUsed
 
-        // Save conversation (only for non-guest users)
     let conversationId = null
 
-    if (!isGuestUser) {
+    if (userId) {
       try {
         const { data: conversation, error: conversationError } = await supabase
           .from('conversations')
@@ -181,12 +183,10 @@ export async function POST(request: NextRequest) {
           console.error('Failed to save conversation:', conversationError)
         } else {
           conversationId = conversation?.id
-                  }
+                }
       } catch (err) {
         console.error('Exception saving conversation:', err)
       }
-    } else {
-      conversationId = 'guest-' + Date.now() // Generate a temporary ID for guests
     }
 
     // Add rate limit headers to successful responses

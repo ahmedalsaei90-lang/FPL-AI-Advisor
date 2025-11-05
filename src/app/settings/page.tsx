@@ -165,23 +165,6 @@ export default function SettingsPage() {
             </Alert>
           )}
 
-          {/* Guest User Notice */}
-          {user?.isGuest && (
-            <Alert className="mb-6 border-blue-500/20 bg-blue-500/10">
-              <UserCircle className="h-4 w-4 text-blue-500" />
-              <AlertDescription className="text-blue-500">
-                <strong>Guest Account:</strong> Create a full account to access all features and save your preferences permanently.
-                <Button
-                  variant="link"
-                  className="ml-2 text-blue-400 hover:text-blue-300"
-                  onClick={() => router.push('/signup')}
-                >
-                  Create Account
-                </Button>
-              </AlertDescription>
-            </Alert>
-          )}
-
           <Tabs defaultValue="profile" className="space-y-6">
             <TabsList className="grid w-full grid-cols-4 bg-glass">
               <TabsTrigger value="profile">
@@ -221,7 +204,6 @@ export default function SettingsPage() {
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Your name"
                       className="bg-background/50"
-                      disabled={user?.isGuest}
                     />
                   </div>
 
@@ -242,9 +224,7 @@ export default function SettingsPage() {
                   <div className="space-y-2">
                     <Label>Account Type</Label>
                     <div>
-                      <Badge variant={user?.isGuest ? "secondary" : "default"}>
-                        {user?.isGuest ? "Guest User" : "Full Account"}
-                      </Badge>
+                      <Badge variant="default">Full Account</Badge>
                     </div>
                   </div>
 
@@ -252,7 +232,7 @@ export default function SettingsPage() {
 
                   <Button
                     onClick={handleSaveProfile}
-                    disabled={loading || user?.isGuest}
+                    disabled={loading}
                     className="w-full bg-gradient-primary hover:opacity-90"
                   >
                     {loading ? (
@@ -281,15 +261,6 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {user?.isGuest ? (
-                    <Alert className="border-yellow-500/20 bg-yellow-500/10">
-                      <AlertCircle className="h-4 w-4 text-yellow-500" />
-                      <AlertDescription className="text-yellow-500">
-                        Guest users cannot import FPL teams. Please create a full account to use this feature.
-                      </AlertDescription>
-                    </Alert>
-                  ) : (
-                    <>
                       <div className="space-y-2">
                         <Label>FPL Team ID</Label>
                         {fplTeamId ? (
@@ -347,8 +318,7 @@ export default function SettingsPage() {
                           Connect FPL Team
                         </Button>
                       )}
-                    </>
-                  )}
+                  
                 </CardContent>
               </Card>
             </TabsContent>
@@ -363,15 +333,6 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {user?.isGuest && (
-                    <Alert className="border-yellow-500/20 bg-yellow-500/10 mb-4">
-                      <AlertCircle className="h-4 w-4 text-yellow-500" />
-                      <AlertDescription className="text-yellow-500">
-                        Notification preferences are not saved for guest users
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
@@ -384,7 +345,6 @@ export default function SettingsPage() {
                         id="email-notifications"
                         checked={emailNotifications}
                         onCheckedChange={setEmailNotifications}
-                        disabled={user?.isGuest}
                       />
                     </div>
 
@@ -401,7 +361,6 @@ export default function SettingsPage() {
                         id="injury-alerts"
                         checked={injuryAlerts}
                         onCheckedChange={setInjuryAlerts}
-                        disabled={user?.isGuest}
                       />
                     </div>
 
@@ -418,7 +377,6 @@ export default function SettingsPage() {
                         id="price-change-alerts"
                         checked={priceChangeAlerts}
                         onCheckedChange={setPriceChangeAlerts}
-                        disabled={user?.isGuest}
                       />
                     </div>
 
@@ -435,7 +393,6 @@ export default function SettingsPage() {
                         id="deadline-reminders"
                         checked={deadlineReminders}
                         onCheckedChange={setDeadlineReminders}
-                        disabled={user?.isGuest}
                       />
                     </div>
                   </div>
@@ -444,7 +401,7 @@ export default function SettingsPage() {
 
                   <Button
                     onClick={handleSaveNotifications}
-                    disabled={loading || user?.isGuest}
+                    disabled={loading}
                     className="w-full bg-gradient-primary hover:opacity-90"
                   >
                     {loading ? (
@@ -473,34 +430,25 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {user?.isGuest ? (
-                    <Alert className="border-blue-500/20 bg-blue-500/10">
-                      <UserCircle className="h-4 w-4 text-blue-500" />
-                      <AlertDescription className="text-blue-500">
-                        Guest accounts have limited security options. Create a full account for enhanced security features.
-                      </AlertDescription>
-                    </Alert>
-                  ) : (
-                    <>
-                      <div className="space-y-3">
-                        <Label>Password</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Change your password to keep your account secure
-                        </p>
-                        <Button
-                          variant="outline"
-                          className="w-full border-white/10"
-                          onClick={() => {
-                            alert('Password change functionality coming soon!')
-                          }}
-                        >
-                          Change Password
-                        </Button>
-                      </div>
+                  <>
+                    <div className="space-y-3">
+                      <Label>Password</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Change your password to keep your account secure
+                      </p>
+                      <Button
+                        variant="outline"
+                        className="w-full border-white/10"
+                        onClick={() => {
+                          alert('Password change functionality coming soon!')
+                        }}
+                      >
+                        Change Password
+                      </Button>
+                    </div>
 
-                      <Separator />
-                    </>
-                  )}
+                    <Separator />
+                  </>
 
                   <div className="space-y-3">
                     <Label>Sign Out</Label>
@@ -517,27 +465,25 @@ export default function SettingsPage() {
                     </Button>
                   </div>
 
-                  {!user?.isGuest && (
-                    <>
-                      <Separator className="bg-red-500/20" />
+                  <>
+                    <Separator className="bg-red-500/20" />
 
-                      <div className="space-y-3">
-                        <Label className="text-red-400">Danger Zone</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Permanently delete your account and all associated data. This action cannot be undone.
-                        </p>
-                        <Button
-                          variant="destructive"
-                          onClick={handleDeleteAccount}
-                          disabled={loading}
-                          className="w-full"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete Account
-                        </Button>
-                      </div>
-                    </>
-                  )}
+                    <div className="space-y-3">
+                      <Label className="text-red-400">Danger Zone</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Permanently delete your account and all associated data. This action cannot be undone.
+                      </p>
+                      <Button
+                        variant="destructive"
+                        onClick={handleDeleteAccount}
+                        disabled={loading}
+                        className="w-full"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Account
+                      </Button>
+                    </div>
+                  </>
                 </CardContent>
               </Card>
             </TabsContent>

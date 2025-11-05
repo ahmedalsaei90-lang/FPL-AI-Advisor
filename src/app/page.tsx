@@ -2,66 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { MessageSquare, Users, Bell, TrendingUp, Shield, Zap, Loader2 } from 'lucide-react'
+import { MessageSquare, Users, Bell, TrendingUp, Shield, Zap } from 'lucide-react'
 
 export default function LandingPage() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
   }, [])
-
-  const handleGuestAccess = async () => {
-    setLoading(true)
-
-    try {
-      // Create guest session first
-      const response = await fetch('/api/auth/guest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to create guest session')
-      }
-
-      const data = await response.json()
-
-      // Store the actual guest user data from API response
-      if (data.user && typeof window !== 'undefined') {
-        localStorage.setItem('user', JSON.stringify(data.user))
-
-        // Dispatch storage event to trigger AuthProvider update
-        try {
-          window.dispatchEvent(
-            new StorageEvent('storage', {
-              key: 'user',
-              newValue: JSON.stringify(data.user)
-            })
-          )
-        } catch {
-          // Fallback for browsers that don't support StorageEvent constructor
-          window.dispatchEvent(new Event('auth:user-updated'))
-        }
-
-        // Wait for AuthProvider to process the user before navigating
-        await new Promise(resolve => setTimeout(resolve, 150))
-
-        // Use replace instead of push to prevent back button issues
-        router.replace('/dashboard')
-      } else {
-        throw new Error('No user data received from guest API')
-      }
-    } catch (error) {
-      console.error('Guest access error:', error)
-      setLoading(false)
-      alert('Failed to create guest session. Please try again.')
-    }
-  }
 
   if (!isClient) {
     return <div style={{padding:24}}></div>
@@ -92,33 +41,15 @@ export default function LandingPage() {
             Get expert insights, player recommendations, and winning strategies.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              size="lg"
-              className="text-lg px-10 py-7 bg-gradient-primary hover:shadow-glow-blue transition-all duration-300 font-bold text-xl"
-              onClick={handleGuestAccess}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Creating Session...
-                </>
-              ) : (
-                <>
-                  <Zap className="mr-2 h-5 w-5" />
-                  Try as Guest
-                </>
-              )}
-            </Button>
+            <Link href="/signup">
+              <Button size="lg" className="text-lg px-10 py-7 bg-gradient-primary hover:shadow-glow-blue transition-all duration-300 font-bold text-xl">
+                Get Started Free
+              </Button>
+            </Link>
             <Link href="/advisor">
               <Button size="lg" className="text-lg px-10 py-7 bg-gradient-secondary hover:shadow-glow-green transition-all duration-300 font-bold text-xl">
                 <MessageSquare className="mr-2 h-5 w-5" />
                 AI Advisor
-              </Button>
-            </Link>
-            <Link href="/signup">
-              <Button size="lg" variant="outline" className="text-lg px-10 py-7 border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground font-bold text-xl transition-all duration-300 hover:shadow-glow-green">
-                Sign Up Free
               </Button>
             </Link>
           </div>
@@ -129,13 +60,6 @@ export default function LandingPage() {
               <Link href="/login" className="text-accent hover:text-accent/80 hover:underline font-bold transition-colors">
                 Sign In
               </Link>
-            </p>
-          </div>
-
-          <div className="mt-8 text-center">
-            <p className="text-base text-foreground/70 mb-2 font-semibold">🚀 No signup required - Start instantly!</p>
-            <p className="text-sm text-foreground/60">
-              Guest access lets you explore the experience; connect your real FPL data by creating an account.
             </p>
           </div>
         </div>
@@ -244,38 +168,25 @@ export default function LandingPage() {
             Join thousands of FPL managers getting <span className="text-accent">AI-powered advice</span>
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              size="lg"
-              className="text-lg px-12 py-7 bg-foreground text-background hover:bg-foreground/90 font-bold text-xl shadow-glow-blue"
-              onClick={handleGuestAccess}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Creating Session...
-                </>
-              ) : (
-                <>
-                  <Zap className="mr-2 h-5 w-5" />
-                  Try as Guest Now
-                </>
-              )}
-            </Button>
+            <Link href="/signup">
+              <Button size="lg" className="text-lg px-12 py-7 bg-foreground text-background hover:bg-foreground/90 font-bold text-xl shadow-glow-blue">
+                Get Started Free
+              </Button>
+            </Link>
             <Link href="/advisor">
               <Button size="lg" className="text-lg px-12 py-7 bg-accent text-accent-foreground hover:bg-accent/90 font-bold text-xl shadow-glow-green transition-all duration-300">
                 <MessageSquare className="mr-2 h-5 w-5" />
                 AI Advisor
               </Button>
             </Link>
-            <Link href="/signup">
+            <Link href="/login">
               <Button size="lg" variant="outline" className="text-lg px-12 py-7 border-2 border-foreground text-foreground hover:bg-foreground hover:text-background font-bold text-xl transition-all duration-300">
-                Sign Up Free
+                Sign In
               </Button>
             </Link>
           </div>
           <p className="text-foreground/70 mt-6 text-base font-medium">
-            ⚡ No credit card required • Free forever for basic features
+            ⚡ No credit card required • Free forever
           </p>
         </div>
       </section>

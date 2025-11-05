@@ -38,7 +38,7 @@ serve(async (req) => {
     }
 
     // Parse the request body
-    const { name, fplTeamId, fplTeamName, isGuest } = await req.json()
+    const { name, fplTeamId, fplTeamName } = await req.json()
 
     // Check if user profile already exists
     const { data: existingProfile } = await supabaseClient
@@ -63,7 +63,7 @@ serve(async (req) => {
         name: name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
         fpl_team_id: fplTeamId || null,
         fpl_team_name: fplTeamName || null,
-        is_guest: isGuest || false,
+        is_guest: false,
         last_active_at: new Date().toISOString(),
       })
       .select()
@@ -82,7 +82,7 @@ serve(async (req) => {
       .from('user_events')
       .insert({
         user_id: user.id,
-        event_type: isGuest ? 'guest_signup' : 'user_signup',
+        event_type: 'user_signup',
         event_data: {
           timestamp: new Date().toISOString(),
           email: user.email,

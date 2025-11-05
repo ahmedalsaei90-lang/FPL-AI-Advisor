@@ -5,7 +5,6 @@ import { createClient } from '@supabase/supabase-js'
 export interface AuthenticatedUser {
   id: string
   email: string
-  isGuest: boolean
 }
 
 // Authentication result
@@ -85,10 +84,10 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
       }
     }
 
-    // Check if user is a guest by querying the users table
+    // Get user profile details
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('is_guest, email')
+      .select('email')
       .eq('id', user.id)
       .single()
 
@@ -99,8 +98,7 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
         success: true,
         user: {
           id: user.id,
-          email: user.email || '',
-          isGuest: false
+          email: user.email || ''
         }
       }
     }
@@ -109,8 +107,7 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
       success: true,
       user: {
         id: user.id,
-        email: userData?.email || user.email || '',
-        isGuest: userData?.is_guest || false
+        email: userData?.email || user.email || ''
       }
     }
   } catch (error) {

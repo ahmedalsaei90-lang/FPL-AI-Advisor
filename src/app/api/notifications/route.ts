@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerClient, createServerClient } from '@/lib/supabase'
+import { getServerClient } from '@/lib/supabase'
 import { authenticateRequest } from '@/lib/auth-middleware'
 import { z } from 'zod'
 
@@ -44,7 +44,6 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = auth.user.id
-    const isGuestUser = auth.user.isGuest
 
     const { searchParams } = new URL(request.url)
     const { page, limit, unreadOnly } = getNotificationsSchema.parse({
@@ -53,8 +52,7 @@ export async function GET(request: NextRequest) {
       unreadOnly: searchParams.get('unreadOnly')
     })
 
-    // Use service client for guest users to bypass RLS
-    const supabase = isGuestUser ? createServerClient() : getServerClient()
+    const supabase = getServerClient()
 
     // Calculate pagination
     const offset = (page - 1) * limit
@@ -157,13 +155,12 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = auth.user.id
-    const isGuestUser = auth.user.isGuest
 
     const body = await request.json()
     const { notificationIds, markAll } = markAsReadSchema.parse(body)
 
-    // Use service client for guest users to bypass RLS
-    const supabase = isGuestUser ? createServerClient() : getServerClient()
+    // Use server client to query notifications with elevated permissions
+    const supabase = getServerClient()
 
     let query = supabase
       .from('user_notifications')
@@ -237,13 +234,12 @@ export async function DELETE(request: NextRequest) {
     }
 
     const userId = auth.user.id
-    const isGuestUser = auth.user.isGuest
 
     const body = await request.json()
     const { notificationIds, deleteAll } = deleteNotificationsSchema.parse(body)
 
-    // Use service client for guest users to bypass RLS
-    const supabase = isGuestUser ? createServerClient() : getServerClient()
+    // Use server client to query notifications with elevated permissions
+    const supabase = getServerClient()
 
     let query = supabase
       .from('user_notifications')
@@ -317,13 +313,12 @@ export async function PUT(request: NextRequest) {
     }
 
     const userId = auth.user.id
-    const isGuestUser = auth.user.isGuest
 
     const body = await request.json()
     const { type, title, message, data } = createNotificationSchema.parse(body)
 
-    // Use service client for guest users to bypass RLS
-    const supabase = isGuestUser ? createServerClient() : getServerClient()
+    // Use server client to query notifications with elevated permissions
+    const supabase = getServerClient()
 
     const { data: notification, error } = await supabase
       .from('user_notifications')

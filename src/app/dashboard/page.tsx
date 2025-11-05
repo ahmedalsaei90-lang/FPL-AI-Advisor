@@ -31,7 +31,6 @@ interface User {
   name: string
   fplTeamId?: number
   fplTeamName?: string
-  isGuest?: boolean
 }
 
 export default function DashboardPage() {
@@ -129,7 +128,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Team Import Section */}
-        {!user?.fplTeamId && !user?.isGuest && (
+        {!user?.fplTeamId && (
           <Card className="mb-8 bg-glass-strong border-primary/30 shadow-glow-blue">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-2xl">
@@ -183,37 +182,6 @@ export default function DashboardPage() {
               <p className="text-sm text-foreground/60 mt-4">
                 Don't know your Team ID? Find it in your FPL profile URL or team page
               </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Guest User Notice */}
-        {user?.isGuest && (
-          <Card className="mb-8 bg-glass-strong border-accent/50 shadow-glow-green">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-2xl">
-                <Users className="h-6 w-6 text-accent" />
-                <span className="text-gradient-glow">Guest Session Active</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-foreground/80 mb-4 text-base">
-                You're previewing the platform in guest mode. Real-time FPL syncing is disabled until you create an account.
-              </p>
-              <div className="flex gap-2">
-                <Link href="/signup">
-                  <Button className="bg-gradient-primary hover:shadow-glow-blue transition-all duration-300 font-bold">
-                    <TrendingUp className="mr-2 h-4 w-4" />
-                    Create Free Account
-                  </Button>
-                </Link>
-                <Link href="/advisor">
-                  <Button variant="outline" className="border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground transition-all duration-300 font-bold">
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Explore AI Advisor
-                  </Button>
-                </Link>
-              </div>
             </CardContent>
           </Card>
         )}
