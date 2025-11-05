@@ -110,6 +110,12 @@ export default function LandingPage() {
                 </>
               )}
             </Button>
+            <Link href="/advisor">
+              <Button size="lg" className="text-lg px-10 py-7 bg-gradient-secondary hover:shadow-glow-green transition-all duration-300 font-bold text-xl">
+                <MessageSquare className="mr-2 h-5 w-5" />
+                AI Advisor
+              </Button>
+            </Link>
             <Link href="/signup">
               <Button size="lg" variant="outline" className="text-lg px-10 py-7 border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground font-bold text-xl transition-all duration-300 hover:shadow-glow-green">
                 Sign Up Free
@@ -256,6 +262,12 @@ export default function LandingPage() {
                 </>
               )}
             </Button>
+            <Link href="/advisor">
+              <Button size="lg" className="text-lg px-12 py-7 bg-accent text-accent-foreground hover:bg-accent/90 font-bold text-xl shadow-glow-green transition-all duration-300">
+                <MessageSquare className="mr-2 h-5 w-5" />
+                AI Advisor
+              </Button>
+            </Link>
             <Link href="/signup">
               <Button size="lg" variant="outline" className="text-lg px-12 py-7 border-2 border-foreground text-foreground hover:bg-foreground hover:text-background font-bold text-xl transition-all duration-300">
                 Sign Up Free

@@ -68,8 +68,11 @@ export default function LoginPage() {
         throw new Error(data.error || 'Invalid credentials')
       }
 
+      // Clear any existing session data (guest or old user) FIRST to prevent conflicts
+      localStorage.removeItem('user')
+
       // Set Supabase session
-            const supabase = getBrowserClient()
+      const supabase = getBrowserClient()
       if (data.session) {
         await supabase.auth.setSession({
           access_token: data.session.access_token,
@@ -77,7 +80,7 @@ export default function LoginPage() {
         })
       }
 
-      // Store user info in localStorage for compatibility with existing components
+      // Store new user info in localStorage for compatibility with existing components
       localStorage.setItem('user', JSON.stringify(data.user))
 
       if (typeof window !== 'undefined') {

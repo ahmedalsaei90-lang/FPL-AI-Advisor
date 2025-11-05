@@ -32,7 +32,7 @@ import {
 
 export default function SettingsPage() {
   const router = useRouter()
-  const { user, logout } = useAuth()
+  const { user, signOut } = useAuth()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
@@ -109,7 +109,7 @@ export default function SettingsPage() {
       // In a real implementation, this would call an API to delete account
       await new Promise(resolve => setTimeout(resolve, 1000))
 
-      await logout()
+      await signOut()
       router.push('/')
     } catch (err: any) {
       setError(err.message || 'Failed to delete account')
@@ -137,11 +137,10 @@ export default function SettingsPage() {
 
   return (
     <AuthGuard>
-      <ThemeBackground />
-      <div className="min-h-screen bg-transparent">
-        <Header />
+      <ThemeBackground>
+        <Header currentPage="Settings" />
 
-        <main className="container mx-auto py-8 px-4 max-w-4xl">
+        <div className="container mx-auto py-8 px-4 max-w-4xl">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gradient-glow mb-2">Settings</h1>
             <p className="text-muted-foreground">Manage your account and preferences</p>
@@ -510,7 +509,7 @@ export default function SettingsPage() {
                     </p>
                     <Button
                       variant="outline"
-                      onClick={logout}
+                      onClick={signOut}
                       className="w-full border-white/10"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
@@ -543,8 +542,8 @@ export default function SettingsPage() {
               </Card>
             </TabsContent>
           </Tabs>
-        </main>
-      </div>
+        </div>
+      </ThemeBackground>
     </AuthGuard>
   )
 }
