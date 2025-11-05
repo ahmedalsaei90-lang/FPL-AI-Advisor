@@ -82,15 +82,30 @@ export default function LeaguesPage() {
       const data = await response.json()
 
       if (!response.ok) {
+        // If no leagues found or error, set empty arrays but don't throw
+        if (response.status === 404 || response.status === 500) {
+          setLeagues([])
+          setPagination({
+            currentPage: 1,
+            totalPages: 0,
+            totalItems: 0,
+            itemsPerPage: 10,
+            hasNextPage: false,
+            hasPrevPage: false
+          })
+          return
+        }
         throw new Error(data.error || 'Failed to load leagues data')
       }
 
       const leaguesData: LeaguesResponse = data
-      setLeagues(leaguesData.leagues)
+      setLeagues(leaguesData.leagues || [])
       setPagination(leaguesData.pagination)
     } catch (error: any) {
       console.error('Leagues data error:', error)
       setError(error.message)
+      // Set empty state on error
+      setLeagues([])
     } finally {
       setLoading(false)
     }

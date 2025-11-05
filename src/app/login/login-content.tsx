@@ -68,10 +68,21 @@ export default function LoginPage() {
         throw new Error(data.error || 'Invalid credentials')
       }
 
-      // Clear any existing session data (guest or old user) FIRST to prevent conflicts
+      // STEP 1: Clear any existing session data (guest or old user) completely
       localStorage.removeItem('user')
 
-      // Set Supabase session
+      // Dispatch event to clear user from AuthProvider state
+      if (typeof window !== 'undefined') {
+        try {
+          window.dispatchEvent(
+            new StorageEvent('storage', { key: 'user', newValue: null })
+          )
+        } catch {
+          window.dispatchEvent(new Event('auth:user-updated'))
+        }
+      }
+
+      // STEP 2: Set Supabase session for the new user
       const supabase = getBrowserClient()
       if (data.session) {
         await supabase.auth.setSession({
@@ -80,9 +91,10 @@ export default function LoginPage() {
         })
       }
 
-      // Store new user info in localStorage for compatibility with existing components
+      // STEP 3: Store new user info in localStorage
       localStorage.setItem('user', JSON.stringify(data.user))
 
+      // STEP 4: Dispatch event to update AuthProvider with new user
       if (typeof window !== 'undefined') {
         try {
           window.dispatchEvent(
@@ -93,8 +105,8 @@ export default function LoginPage() {
         }
       }
 
-      // Small delay to ensure auth state updates before navigation
-      await new Promise(resolve => setTimeout(resolve, 100))
+      // STEP 5: Wait longer to ensure auth state fully updates before navigation
+      await new Promise(resolve => setTimeout(resolve, 200))
       router.replace('/dashboard')
     } catch (error: any) {
       setError(error.message)

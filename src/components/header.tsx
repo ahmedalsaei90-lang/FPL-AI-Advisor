@@ -28,6 +28,11 @@ export function Header({ title, showUserMenu = true, currentPage }: HeaderProps)
   const router = useRouter()
   const { user, signOut } = useAuth()
 
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/')
+  }
+
   return (
     <header className="bg-glass-strong border-b border-primary/30 shadow-glow-blue backdrop-blur-xl sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
@@ -52,7 +57,7 @@ export function Header({ title, showUserMenu = true, currentPage }: HeaderProps)
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={signOut}
+                onClick={handleSignOut}
                 className="hover:bg-destructive/20 hover:text-destructive transition-colors"
               >
                 <LogOut className="h-5 w-5" />

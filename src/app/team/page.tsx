@@ -53,14 +53,8 @@ export default function TeamPage() {
     if (!user) {
       return
     }
-    
-    // Check if user has connected their FPL team (only for non-guest users)
-    if (!user.isGuest && !user.fplTeamId) {
-      router.push('/dashboard')
-      return
-    }
-    
-    // Load team data
+
+    // Load team data (will show empty state if no team connected)
     loadTeamData(user.id)
   }, [router, user])
 
