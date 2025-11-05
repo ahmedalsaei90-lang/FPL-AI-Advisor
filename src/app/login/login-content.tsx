@@ -89,7 +89,10 @@ export default function LoginPage() {
           window.dispatchEvent(new Event('auth:user-updated'))
         }
       }
-      router.push('/dashboard')
+
+      // Small delay to ensure auth state updates before navigation
+      await new Promise(resolve => setTimeout(resolve, 100))
+      router.replace('/dashboard')
     } catch (error: any) {
       setError(error.message)
     } finally {

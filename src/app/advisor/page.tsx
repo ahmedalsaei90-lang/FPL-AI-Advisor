@@ -184,7 +184,7 @@ export default function AdvisorPage() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-gradient-pitch relative overflow-hidden">
+      <div className="mobile-height-fix bg-gradient-pitch relative overflow-hidden">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
@@ -193,51 +193,49 @@ export default function AdvisorPage() {
 
         <Header currentPage="AI Advisor" />
 
-      <div className="container mx-auto px-4 py-6 relative z-10">
-        <div className="grid lg:grid-cols-4 gap-6 h-[calc(100vh-120px)]">
+      <div className="container mx-auto px-4 py-6 relative z-10 mobile-scroll-fix">
+        <div className="grid lg:grid-cols-4 gap-6 mobile-safe-height">
           {/* Quick Questions Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="h-full bg-glass-strong border-primary/30 shadow-glow-blue">
+          <div className="lg:col-span-1 h-full overflow-y-auto mobile-scroll-fix">
+            <Card className="bg-glass-strong border-primary/30 shadow-glow-blue">
               <CardHeader>
                 <CardTitle className="text-xl font-black">
                   <span className="text-gradient-primary">Quick Questions</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[400px]">
-                  <div className="space-y-2">
-                    {quickQuestions.map((question) => (
-                      <Button
-                        key={question.id}
-                        variant="outline"
-                        className="w-full justify-start text-left h-auto p-3 bg-glass border-accent/30 hover:bg-gradient-primary hover:shadow-glow-blue transition-all duration-300 font-medium"
-                        onClick={() => handleQuickQuestion(question)}
-                        disabled={loading}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-accent">{question.icon}</span>
-                          <span className="text-sm">{question.text}</span>
-                        </div>
-                      </Button>
-                    ))}
-                  </div>
-                </ScrollArea>
+                <div className="space-y-2 max-h-[400px] overflow-y-auto mobile-scroll-fix">
+                  {quickQuestions.map((question) => (
+                    <Button
+                      key={question.id}
+                      variant="outline"
+                      className="w-full justify-start text-left h-auto p-3 bg-glass border-accent/30 hover:bg-gradient-primary hover:shadow-glow-blue transition-all duration-300 font-medium"
+                      onClick={() => handleQuickQuestion(question)}
+                      disabled={loading}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-accent">{question.icon}</span>
+                        <span className="text-sm">{question.text}</span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Chat Interface */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 h-full flex flex-col">
             <Card className="h-full flex flex-col bg-glass-strong border-secondary/30 shadow-glow-green">
-              <CardHeader>
+              <CardHeader className="flex-shrink-0">
                 <CardTitle className="flex items-center gap-2 text-2xl font-black">
                   <Bot className="h-6 w-6 text-accent" />
                   <span className="text-gradient-glow">Chat with FPL AI Advisor</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col">
+              <CardContent className="flex-1 flex flex-col min-h-0">
                 {/* Messages Area */}
-                <ScrollArea className="flex-1 pr-4">
+                <div className="flex-1 overflow-y-auto mobile-scroll-fix ios-chat-container pr-4">
                   <div className="space-y-4 pb-4">
                     {messages.length === 0 ? (
                       <div className="text-center py-8">
@@ -307,12 +305,12 @@ export default function AdvisorPage() {
                     )}
                     <div ref={messagesEndRef} />
                   </div>
-                </ScrollArea>
+                </div>
 
-                <Separator className="my-4" />
+                <Separator className="my-4 flex-shrink-0" />
 
                 {/* Input Area */}
-                <form onSubmit={handleSubmit} className="flex gap-2">
+                <form onSubmit={handleSubmit} className="flex gap-2 flex-shrink-0">
                   <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}

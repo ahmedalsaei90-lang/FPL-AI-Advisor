@@ -127,6 +127,13 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  html {
+    /* Fix for mobile Safari viewport height */
+    height: 100%;
+    overflow: hidden;
+  }
+
   body {
     @apply text-foreground;
     background: linear-gradient(135deg,
@@ -138,6 +145,10 @@
     );
     background-attachment: fixed;
     min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height for mobile */
+    height: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
   }
 }
 
@@ -225,5 +236,36 @@
   .shadow-glow-green {
     box-shadow: 0 0 20px oklch(0.70 0.25 140 / 0.4),
                 0 0 40px oklch(0.70 0.25 140 / 0.2);
+  }
+
+  /* Mobile Safari specific fixes */
+  .mobile-scroll-fix {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: scroll;
+    overscroll-behavior-y: contain;
+  }
+
+  .mobile-height-fix {
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height */
+  }
+
+  .mobile-safe-height {
+    height: calc(100vh - 120px);
+    height: calc(100dvh - 120px); /* Dynamic viewport height */
+  }
+
+  /* Fix for iOS Safari scrolling */
+  @supports (-webkit-touch-callout: none) {
+    .ios-scroll-fix {
+      height: -webkit-fill-available;
+    }
+
+    .ios-chat-container {
+      max-height: calc(100vh - 200px);
+      max-height: calc(100dvh - 200px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
   }
 }
