@@ -68,23 +68,46 @@ export default function LoginPage() {
         throw new Error(data.error || 'Invalid credentials')
       }
 
-      // Clear any existing user session data (guest or old user)
-      localStorage.removeItem('user')
+      // DEBUG: Log what we received from login API
+      console.log('=== LOGIN DEBUG ===')
+      console.log('Login API response:', data)
+      console.log('User isGuest flag:', data.user?.isGuest)
 
-      // Set Supabase session
+      // CRITICAL FIX: Explicitly set isGuest to false for authenticated logins
+      // The API might be returning isGuest:true from the database profile
+      const authenticatedUser = {
+        ...data.user,
+        isGuest: false  // Force this to false - authenticated users are NOT guests
+      }
+
+      console.log('Corrected user object:', authenticatedUser)
+
+      // Clear ALL localStorage to ensure no guest remnants
+      localStorage.clear()
+      console.log('Cleared localStorage')
+
+      // Get Supabase client
       const supabase = getBrowserClient()
+
+      // Sign out any existing session first to clear guest session
+      await supabase.auth.signOut()
+      console.log('Signed out existing Supabase session')
+
+      // Set the new authenticated session
       if (data.session) {
         await supabase.auth.setSession({
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token
         })
+        console.log('Set new Supabase session')
       }
 
-      // Store new user info in localStorage
-      localStorage.setItem('user', JSON.stringify(data.user))
+      // Store corrected user info with isGuest explicitly false
+      localStorage.setItem('user', JSON.stringify(authenticatedUser))
+      console.log('Stored user in localStorage:', localStorage.getItem('user'))
+      console.log('=== END LOGIN DEBUG ===')
 
       // Force a full page reload to ensure clean auth state
-      // This is the most reliable way to clear guest session and load new user
       window.location.href = '/dashboard'
     } catch (error: any) {
       setError(error.message)
