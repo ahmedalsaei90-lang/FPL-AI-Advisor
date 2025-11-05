@@ -42,34 +42,24 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       return
     }
 
-    try {
-      // Use authenticated API call - userId is extracted from JWT token on server
-      // Longer timeout for Vercel cold starts
-      const fetchPromise = authenticatedGet('/api/notifications?limit=10')
-      const timeoutPromise = new Promise<Response>((_, reject) =>
-        setTimeout(() => reject(new Error('Notifications fetch timeout')), 10000)
-      )
-
-      const response = await Promise.race([fetchPromise, timeoutPromise])
-
-      if (response.ok) {
-        const data = await response.json()
+    // Make this completely non-blocking - don't await, just fire and forget
+    authenticatedGet('/api/notifications?limit=10')
+      .then(response => {
+        if (response.ok) {
+          return response.json()
+        }
+        throw new Error('Failed to fetch notifications')
+      })
+      .then(data => {
         setNotifications(data.notifications || [])
         setUnreadCount(data.unreadCount || 0)
-      } else if (response.status === 404 || response.status === 500) {
-        // Table doesn't exist or server error - silently fail
+      })
+      .catch(() => {
+        // Silently fail - notifications are optional
+        // Don't log anything even in development to reduce console noise
         setNotifications([])
         setUnreadCount(0)
-      }
-    } catch (error) {
-      // Silently fail - notifications are not critical for app functionality
-      // Only log in development
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Notifications unavailable:', error)
-      }
-      setNotifications([])
-      setUnreadCount(0)
-    }
+      })
   }, [userId])
 
   useEffect(() => {

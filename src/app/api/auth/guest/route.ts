@@ -3,6 +3,30 @@ import { getServerClient, createServerClient } from '@/lib/supabase'
 import { randomUUID } from 'crypto'
 import { checkRateLimit, rateLimits } from '@/lib/rate-limit'
 
+/**
+ * Generate unique guest user number
+ * Returns next available guest number (e.g., 1, 2, 3...)
+ */
+async function getNextGuestNumber(supabase: any): Promise<number> {
+  const { data: guestUsers, error } = await supabase
+    .from('users')
+    .select('email')
+    .like('email', 'guest_%@fpl-advisor.com')
+    .order('email', { ascending: false })
+    .limit(1)
+
+  if (error || !guestUsers || guestUsers.length === 0) {
+    return 1
+  }
+
+  // Extract number from email (e.g., guest_00001@fpl-advisor.com -> 1)
+  const lastEmail = guestUsers[0].email
+  const match = lastEmail.match(/guest_(\d+)@/)
+  const lastNumber = match ? parseInt(match[1], 10) : 0
+
+  return lastNumber + 1
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Check rate limit FIRST
@@ -29,87 +53,58 @@ export async function POST(request: NextRequest) {
     // Use service client to bypass RLS for guest user creation
     const supabase = createServerClient()
 
-    // Create or get guest user
-    const { data: existingGuestUser, error: queryError } = await supabase
+    // Generate unique guest number
+    const guestNumber = await getNextGuestNumber(supabase)
+    const guestCode = guestNumber.toString().padStart(5, '0') // e.g., 00001
+    const guestEmail = `guest_${guestCode}@fpl-advisor.com`
+    const guestName = `Guest #${guestNumber}`
+
+    // Create auth user first to satisfy foreign key constraint
+    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+      email: guestEmail,
+      password: randomUUID().replace(/-/g, ''), // Random password
+      email_confirm: true,
+      user_metadata: {
+        is_guest: true,
+        guest_number: guestNumber,
+        display_name: guestName
+      }
+    })
+
+    if (authError) {
+      console.error('Auth user creation error:', authError)
+      throw authError
+    }
+
+    // Now create the user profile
+    const { data: guestUser, error: createError } = await supabase
       .from('users')
-      .select('*')
-      .eq('email', 'guest@fpl-advisor.com')
+      .insert({
+        id: authUser.user.id,
+        email: guestEmail,
+        name: guestName,
+        last_active_at: new Date().toISOString()
+      })
+      .select()
       .single()
 
-    let guestUser = existingGuestUser
-
-    if (!guestUser) {
-      // Create auth user first to satisfy foreign key constraint
-      const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-        email: 'guest@fpl-advisor.com',
-        password: randomUUID().replace(/-/g, ''), // Random password
-        email_confirm: true,
-        user_metadata: {
-          is_guest: true,
-          display_name: 'Guest User'
-        }
-      })
-
-      if (authError) {
-        throw authError
-      }
-
-      // Now create the user profile
-      const { data: newGuestUser, error: createError } = await supabase
-        .from('users')
-        .insert({
-          id: authUser.user.id,
-          email: 'guest@fpl-advisor.com',
-          name: 'Guest User'
-        })
-        .select()
-        .single()
-
-      if (createError) {
-        throw createError
-      }
-
-      guestUser = newGuestUser
+    if (createError) {
+      console.error('User profile creation error:', createError)
+      throw createError
     }
 
-    if (guestUser.fpl_team_id === 999999) {
-      const { error: clearSampleError, data: cleanedUser } = await supabase
-        .from('users')
-        .update({
-          fpl_team_id: null,
-          fpl_team_name: null,
-          last_active_at: new Date().toISOString()
-        })
-        .eq('id', guestUser.id)
-        .select()
-        .single()
-
-      if (cleanedUser) {
-        guestUser = cleanedUser
-      }
-    }
-
-    // Update last active timestamp for the reusable guest account
+    // Create guest login event (optional - fail silently if table doesn't exist)
     await supabase
-      .from('users')
-      .update({ last_active_at: new Date().toISOString() })
-      .eq('id', guestUser.id)
-
-    // Create guest login event
-    const { error: eventError } = await supabase
       .from('user_events')
       .insert({
         user_id: guestUser.id,
         event_type: 'guest_login',
         event_data: JSON.stringify({
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          guest_number: guestNumber
         })
       })
-    
-    if (eventError) {
-      console.error('Error creating guest login event:', eventError);
-      // Don't throw here - the guest user was created successfully
-    }
+      .then(null, () => {}) // Ignore errors
 
     // Add rate limit headers to successful responses
     return NextResponse.json(
@@ -119,12 +114,14 @@ export async function POST(request: NextRequest) {
           id: guestUser.id,
           email: guestUser.email,
           name: guestUser.name,
+          guestNumber: guestNumber,
           fplTeamId: guestUser.fpl_team_id ?? null,
           fplTeamName: guestUser.fpl_team_name ?? null,
           isGuest: true
         }
       },
       {
+        status: 201,
         headers: {
           'X-RateLimit-Limit': rateLimit.limit.toString(),
           'X-RateLimit-Remaining': rateLimit.remaining.toString(),

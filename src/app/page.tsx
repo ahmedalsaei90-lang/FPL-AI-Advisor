@@ -103,6 +103,15 @@ export default function LandingPage() {
             </Link>
           </div>
 
+          <div className="mt-6 text-center">
+            <p className="text-base text-foreground/70 mb-2 font-semibold">
+              Already have an account?{' '}
+              <Link href="/login" className="text-accent hover:text-accent/80 hover:underline font-bold transition-colors">
+                Sign In
+              </Link>
+            </p>
+          </div>
+
           <div className="mt-8 text-center">
             <p className="text-base text-foreground/70 mb-2 font-semibold">🚀 No signup required - Start instantly!</p>
             <p className="text-sm text-foreground/60">
