@@ -17,34 +17,48 @@ export default function LandingPage() {
 
   const handleGuestAccess = async () => {
     setLoading(true)
-    
+
     try {
       // Create guest session first
       const response = await fetch('/api/auth/guest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to create guest session')
       }
-      
+
       const data = await response.json()
-      
+
       // Store the actual guest user data from API response
       if (data.user && typeof window !== 'undefined') {
         localStorage.setItem('user', JSON.stringify(data.user))
-        
-        // Use Next.js router instead of window.location.href to avoid full page reload
-        // This allows the AuthProvider to pick up the localStorage change through its useEffect
-        router.push('/dashboard')
+
+        // Dispatch storage event to trigger AuthProvider update
+        try {
+          window.dispatchEvent(
+            new StorageEvent('storage', {
+              key: 'user',
+              newValue: JSON.stringify(data.user)
+            })
+          )
+        } catch {
+          // Fallback for browsers that don't support StorageEvent constructor
+          window.dispatchEvent(new Event('auth:user-updated'))
+        }
+
+        // Wait for AuthProvider to process the user before navigating
+        await new Promise(resolve => setTimeout(resolve, 150))
+
+        // Use replace instead of push to prevent back button issues
+        router.replace('/dashboard')
       } else {
         throw new Error('No user data received from guest API')
       }
     } catch (error) {
       console.error('Guest access error:', error)
       setLoading(false)
-      // Show error to user - you could add a toast or alert here
       alert('Failed to create guest session. Please try again.')
     }
   }

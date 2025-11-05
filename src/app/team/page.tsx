@@ -71,12 +71,19 @@ export default function TeamPage() {
       const data = await response.json()
 
       if (!response.ok) {
+        // If no team data found (404), set teamData to null but don't throw error
+        // This allows us to show a helpful message instead of crashing
+        if (response.status === 404) {
+          setTeamData(null)
+          return
+        }
         throw new Error(data.error || 'Failed to load team data')
       }
 
       setTeamData(data)
     } catch (error: any) {
       console.error('Team data error:', error)
+      setTeamData(null)
     } finally {
       setLoading(false)
     }
@@ -119,7 +126,39 @@ export default function TeamPage() {
       <ThemeBackground>
         <Header currentPage="My Team" />
 
-      {teamData && (
+      {!teamData ? (
+        <div className="container mx-auto px-4 py-6">
+          <Card className="bg-glass-strong border-primary/30 shadow-glow-blue max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-2xl font-black text-center">
+                <span className="text-gradient-primary">No Team Data Found</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center space-y-4">
+              <p className="text-foreground/80 text-lg">
+                {user?.isGuest
+                  ? "Guest users don't have FPL team data. Create an account and import your team to view detailed statistics."
+                  : "You haven't imported your FPL team yet. Import your team to view detailed statistics and get personalized advice."}
+              </p>
+              <div className="flex gap-4 justify-center mt-6">
+                <Link href="/dashboard">
+                  <Button className="bg-gradient-primary hover:shadow-glow-blue transition-all duration-300 font-bold">
+                    <Shirt className="mr-2 h-5 w-5" />
+                    {user?.isGuest ? 'Go to Dashboard' : 'Import Team'}
+                  </Button>
+                </Link>
+                {!user?.isGuest && (
+                  <Link href="/advisor">
+                    <Button variant="outline" className="border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground transition-all duration-300 font-bold">
+                      Get AI Advice
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
         <div className="container mx-auto px-4 py-6">
           {/* Team Overview */}
           <div className="grid md:grid-cols-4 gap-6 mb-8">
