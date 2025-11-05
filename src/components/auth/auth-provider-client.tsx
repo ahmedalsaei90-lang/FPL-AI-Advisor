@@ -200,9 +200,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               email: session.user.email,
               name: (profile as any).name || session.user.user_metadata?.display_name || session.user.email?.split('@')[0],
               fplTeamId: (profile as any).fplTeamId,
-              fplTeamName: (profile as any).fplTeamName
+              fplTeamName: (profile as any).fplTeamName,
+              isGuest: false  // Authenticated users are NEVER guests
             };
-            
+
             setUser(userData);
             // Update localStorage for backward compatibility
             localStorage.setItem('user', JSON.stringify(userData));

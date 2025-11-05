@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
           name: user.user_metadata?.display_name || profile?.name || email.split('@')[0],
           fplTeamId: profile?.fpl_team_id,
           fplTeamName: profile?.fpl_team_name,
-          isGuest: profile?.is_guest || false
+          isGuest: false  // Authenticated users are NEVER guests
         },
         session: {
           access_token: session.access_token,
