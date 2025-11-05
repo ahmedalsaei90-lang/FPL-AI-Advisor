@@ -1,0 +1,21 @@
+{
+  "watch": ["server.ts", "src"],
+  "ext": "ts,tsx,js,jsx",
+  "ignore": [
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "node_modules",
+    ".git",
+    "tsconfig.tsbuildinfo",
+    ".next",
+    "dist",
+    "build",
+    "*.log"
+  ],
+  "exec": "npx tsx server.ts",
+  "verbose": true,
+  "delay": "1000",
+  "events": {
+    "restart": "echo \"Restarting server...\""
+  }
+}

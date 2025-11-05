@@ -1,0 +1,10 @@
+{
+  "name": "FPL AI Advisor",
+  "short_name": "FPL AI",
+  "description": "AI-powered Fantasy Premier League advisor",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait"
+}
